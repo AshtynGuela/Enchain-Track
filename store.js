@@ -1,3 +1,10 @@
+/**
+ *  This file contains the main logic for the store pages, including fetching data, rendering products, and handling user interactions. It relies on the API functions defined in global.js to communicate with the backend server.
+*/
+
+// checks user credentials saved in the local storage if not return to Login page
+setUpUser();
+
 const dashboardRoutes = {
   Home:             '/store/home.html',
   Browse:           '/store/browse.html',

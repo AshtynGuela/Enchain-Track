@@ -1,14 +1,32 @@
 const API_BASE_URL = "http://localhost:3000";
-const CURRENT_USER_ID = "00000003";
-let orderCache = [];
+let CURRENT_USER_ID = "00000003";
+
+
+function clearUserSession() {
+	localStorage.removeItem("userId");
+	localStorage.removeItem("username");
+}
+
+function setUpUser() {
+	const userId = localStorage.getItem('userId');
+	const username = localStorage.getItem('username');
+	if (!userId) {
+		clearUserSession();
+		window.location.href = '/login.html';
+	} else {
+		document.querySelector('.text-wrapper-12').textContent = `${username}`;
+		CURRENT_USER_ID = userId;
+	}
+}
 
 const dropdownActions = [
-  {
-    label: 'Logout',
-    action: () => {
-      window.location.href = '/login.html';
-    }
-  }
+	{
+		label: 'Logout',
+		action: () => {
+			clearUserSession();
+			window.location.href = '/login.html';
+		}
+	}
 ];
 
 function createHeaderDropdown() {

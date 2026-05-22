@@ -1,4 +1,9 @@
+/**
+ * This file contains the js code for the login and sign up.
+ */
+
 const API_BASE = "http://localhost:3000";
+clearUserSession();
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -25,9 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			const result = await res.json();
 
 			if (result.success) {
-			window.location.href = "/login.html";
+				window.location.href = "/login.html";
 			} else {
-			alert(result.message);
+				alert(result.message);
 			}
 
 		} catch (err) {
@@ -55,7 +60,16 @@ document.addEventListener("DOMContentLoaded", () => {
 		const result = await res.json();
 
 		if (result.success) {
-			window.location.href = "/home.html";
+			if (result.name === "Admin") {
+				window.location.href = "/dashboard/home.html";
+				localStorage.setItem("userId", result.userId);
+				localStorage.setItem("username", result.name);
+			}
+			else {
+				window.location.href = "/store/home.html";
+				localStorage.setItem("userId", result.userId);
+				localStorage.setItem("username", result.name);
+			}
 		} else {
 			alert(result.message);
 		}
