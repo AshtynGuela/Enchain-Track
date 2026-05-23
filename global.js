@@ -14,7 +14,7 @@ function setUpUser() {
 		clearUserSession();
 		window.location.href = '/login.html';
 	} else {
-		document.querySelector('.text-wrapper-12').textContent = `${username}`;
+		document.querySelector('.profile-name').textContent = `${username} ▼`;
 		CURRENT_USER_ID = userId;
 	}
 }
