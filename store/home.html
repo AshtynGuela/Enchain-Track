@@ -76,6 +76,7 @@
 
         </main>
     </div>
+
     <div class="card-modal-overlay" hidden>
         <div class="card-modal" role="dialog" aria-modal="true">
             <button type="button" class="modal-close" aria-label="Close details">×</button>
@@ -95,6 +96,26 @@
             </div>
         </div>
     </div>
+
+    <div class="payment-modal-overlay" hidden>
+        <div class="payment-modal" role="dialog" aria-modal="true">
+            <button type="button" class="modal-close" aria-label="Close details">×</button>
+            <div class="modal-details">
+                <h2 class="modal-title">Payment Options</h2>
+                <p class="modal-description">Choose your preferred payment method.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-action COD">Cash on Delivery</button>
+                <button type="button" class="modal-action GCASH">Gcash Payment</button>
+            </div>
+            <div id="gcash-reference-input" hidden style="display: flex; align-items: center; gap: 10px; margin-top: 15px; padding: 0 20px;">
+                <label for="payment-reference" style="font-weight: 500;">GCASH Reference Code:</label>
+                <input type="text" id="payment-reference" placeholder="Enter GCASH reference code" style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                <button type="button" class="modal-action" style="margin: 0; padding: 5px 15px;">Submit</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/global.js" defer></script>
     <script src="/store.js" defer></script>
 </body>

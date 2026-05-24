@@ -392,19 +392,8 @@ else if (document.body.id === 'store-cart') {
 			return;
 		}
 
-		try {
-			const result = await addOrder();
-			if (result?.order) {
-				alert('Order placed successfully.');
-				document.querySelector('.table-body').innerHTML = '';
-				updateTotals();
-			} else {
-				alert('Unable to place order.');
-			}
-		} catch (err) {
-			console.error('Checkout error:', err);
-			alert('Could not place order.');
-		}
+		// Open payment modal for cart checkout
+		openPaymentModalForCheckout('cartCheckout', {});
 	}
 
 	document.addEventListener('DOMContentLoaded', async () => {
@@ -559,7 +548,6 @@ else if (document.body.id === 'store-order') {
 
 document.addEventListener('DOMContentLoaded', () => {
 	const cardModalOverlay = document.querySelector('.card-modal-overlay');
-	
 	if (cardModalOverlay) {
 		const modalTitle = cardModalOverlay.querySelector('.modal-title');
 		const modalSubtitle = cardModalOverlay.querySelector('.modal-subtitle');
@@ -568,26 +556,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		const closeButton = cardModalOverlay.querySelector('.modal-close');
 
 		function closeCardModal() {
-		cardModalOverlay.hidden = true;
-		document.body.style.overflow = '';
+			cardModalOverlay.hidden = true;
+			document.body.style.overflow = '';
 		}
 
 		// Add card pop-up for store cards
 		function openCardModal(card) {
-		const productName = card.querySelector('.detail-sample1, .item-detail1')?.textContent.trim() || 'Item details';
-		const productDescription = card.querySelector('.detail-sample2, .item-detail2')?.textContent.trim() || '';
-		const imageSource = card.dataset.productImage || '/img/home-image.png';
+			const productName = card.querySelector('.detail-sample1, .item-detail1')?.textContent.trim() || 'Item details';
+			const productDescription = card.querySelector('.detail-sample2, .item-detail2')?.textContent.trim() || '';
+			const imageSource = card.dataset.productImage || '/img/home-image.png';
 
-		const discountedPrice = formatPrice((Number(card.dataset.productPrice) || 0) * (1 - (Number(card.dataset.productDiscount) || 0) / 100));
-		const originalPrice = `<s>₱${formatPrice(Number(card.dataset.productPrice) || 0)}</s>`;
+			const discountedPrice = formatPrice((Number(card.dataset.productPrice) || 0) * (1 - (Number(card.dataset.productDiscount) || 0) / 100));
+			const originalPrice = `<s>₱${formatPrice(Number(card.dataset.productPrice) || 0)}</s>`;
 
-		selectedProductId = card.dataset.productId || null;
-		modalTitle.textContent = productName;
-		modalSubtitle.innerHTML = `₱${card.dataset.productDiscount > 0 ? `${discountedPrice} ${originalPrice}` : `${formatPrice(Number(card.dataset.productPrice) || 0)}`}`;
-		modalDescription.textContent = productDescription;
-		modalImage.src = imageSource;
-		cardModalOverlay.hidden = false;
-		document.body.style.overflow = 'hidden';
+			selectedProductId = card.dataset.productId || null;
+			modalTitle.textContent = productName;
+			modalSubtitle.innerHTML = `₱${card.dataset.productDiscount > 0 ? `${discountedPrice} ${originalPrice}` : `${formatPrice(Number(card.dataset.productPrice) || 0)}`}`;
+			modalDescription.textContent = productDescription;
+			modalImage.src = imageSource;
+			cardModalOverlay.hidden = false;
+			document.body.style.overflow = 'hidden';
 		}
 
 		const addCartButton = cardModalOverlay.querySelector('.modal-action.add-to-cart');
@@ -616,10 +604,15 @@ document.addEventListener('DOMContentLoaded', () => {
 				const quantityInput = cardModalOverlay.querySelector('#modal-quantity');
 				const quantity = parseInt(quantityInput?.value) || 1;
 
-				const result = await quickBuy(selectedProductId, quantity);
-				if (result) {
-					window.location.href = dashboardRoutes.Cart;
-				}
+				// Close card modal and open payment modal for buy now
+				cardModalOverlay.hidden = true;
+				document.body.style.overflow = '';
+
+				// Open payment modal with buy now context
+				openPaymentModalForCheckout('quickBuy', {
+					productId: selectedProductId,
+					quantity: quantity
+				});
 			});
 		}
 
@@ -639,5 +632,129 @@ document.addEventListener('DOMContentLoaded', () => {
 			closeCardModal();
 		}
 		});
+	}
+
+	const paymentModalOverlay = document.querySelector('.payment-modal-overlay');
+	if (paymentModalOverlay) {
+		const closeButton = paymentModalOverlay.querySelector('.modal-close');
+		const codButton = paymentModalOverlay.querySelector('.modal-action.COD');
+		const gcashButton = paymentModalOverlay.querySelector('.modal-action.GCASH');
+		let checkoutContext = {}; // Store checkout details
+
+		function closePaymentModal() {
+			paymentModalOverlay.hidden = true;
+			document.body.style.overflow = '';
+			checkoutContext = {}; // Clear context
+		}
+
+		function openPaymentModalForCheckout(checkoutType, data) {
+			checkoutContext = { type: checkoutType, ...data };
+			
+			// Reset modal to payment selection view
+			paymentModalOverlay.querySelector('.modal-description').innerHTML = "Choose your preferred payment method.";
+			const modalActions = paymentModalOverlay.querySelector('.modal-actions');
+			const gcashInput = document.getElementById('gcash-reference-input');
+			
+			if (modalActions) modalActions.style.display = 'flex';
+			if (gcashInput) gcashInput.style.display = 'none';
+			
+			paymentModalOverlay.hidden = false;
+			document.body.style.overflow = 'hidden';
+		}
+
+		// Handle COD payment
+		if (codButton) {
+			codButton.addEventListener('click', async () => {
+				const { type, productId, quantity } = checkoutContext;
+				
+				try {
+					let result;
+					if (type === 'quickBuy') {
+						// Buy now with COD (no gcashref)
+						result = await quickBuy(productId, quantity, null);
+					} else if (type === 'cartCheckout') {
+						// Cart checkout with COD
+						result = await addOrder(null);
+					}
+					
+					if (result) {
+						closePaymentModal();
+					}
+				} catch (err) {
+					console.error('Checkout error:', err);
+					alert('Could not complete order.');
+				}
+			});
+		}
+
+		// Handle GCASH payment
+		if (gcashButton) {
+			gcashButton.addEventListener('click', () => {
+				// Show GCASH reference input
+				paymentModalOverlay.querySelector('.modal-description').innerHTML = "Please input your GCASH payment reference code:";
+				const modalActions = paymentModalOverlay.querySelector('.modal-actions');
+				const gcashInput = document.getElementById('gcash-reference-input');
+				
+				if (modalActions) modalActions.style.display = 'none';
+				if (gcashInput) {
+					gcashInput.style.display = 'flex';
+					gcashInput.hidden = false;
+				}
+				
+				// Get the input field and submit button
+				const refInput = gcashInput?.querySelector('input');
+				const submitBtn = gcashInput?.querySelector('button');
+				
+				if (refInput && submitBtn) {
+					refInput.value = ''; // Clear previous value
+					refInput.focus();
+					
+					const handleGcashSubmit = async () => {
+						const gcashReference = refInput.value.trim();
+						if (!gcashReference) {
+							alert('Please enter a GCASH reference code.');
+							return;
+						}
+						
+						const { type, productId, quantity } = checkoutContext;
+						
+						try {
+							let result;
+							if (type === 'quickBuy') {
+								// Buy now with GCASH reference
+								result = await quickBuy(productId, quantity, gcashReference);
+							} else if (type === 'cartCheckout') {
+								// Cart checkout with GCASH reference
+								result = await addOrder(gcashReference);
+							}
+							
+							if (result) {
+								closePaymentModal();
+							}
+						} catch (err) {
+							console.error('Checkout error:', err);
+							alert('Could not complete order.');
+						}
+					};
+					
+					submitBtn.onclick = handleGcashSubmit;
+					refInput.addEventListener('keydown', (e) => {
+						if (e.key === 'Enter') {
+							handleGcashSubmit();
+						}
+					});
+				}
+			});
+		}
+
+		closeButton.addEventListener('click', closePaymentModal);
+		paymentModalOverlay.addEventListener('click', (event) => {
+			if (event.target === paymentModalOverlay) {
+				closePaymentModal();
+			}
+		});
+
+		// Export function for use in cart checkout
+		window.openPaymentModalForCheckout = openPaymentModalForCheckout;
 	}
 });

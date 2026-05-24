@@ -654,7 +654,7 @@ app.post("/quickbuy", async (req, res) => {
 
         await updateProductStock(productId, quantity);
 
-        const [[order]] = await db.query(`
+        const [order] = await db.query(`
             INSERT INTO orders (customer_id, order_date, order_status, transaction_type)
             VALUES (?, NOW(), 'pending', ?)
         `, [userId, gcashref ? 'g' : 'c']);
@@ -662,32 +662,20 @@ app.post("/quickbuy", async (req, res) => {
         await db.query(`
             INSERT INTO order_item (order_id, product_id, item_quantity, item_price)
             VALUES (?, ?, ?, (SELECT product_price FROM product WHERE product_id = ?))
-        `, [order.order_id, productId, quantity, productId]);
-
+        `, [order.insertId, productId, quantity, productId]);
+        
         if (gcashref) {
             await db.query(`
                 UPDATE orders
                 SET transaction_date = NOW(),
-                    transaction_total = (SELECT SUM(item_quantity * item_price) FROM order_item WHERE order_id = ?)
+                    transaction_total = (SELECT SUM(item_quantity * item_price * (1 - product_discount / 100)) FROM order_item oi JOIN product p ON oi.product_id = p.product_id WHERE oi.order_id = ?) + 5.00
                 WHERE order_id = ?
-            `, [order.order_id, order.order_id]);
+            `, [order.insertId, order.insertId]);
 
             await db.query(`
                 INSERT INTO gcash (Gorder_id, gcash_reference)
-                VALUES (?, ?)`, [order.order_id, gcashref]);
-
-            await db.query(`
-                UPDATE orders
-                SET transaction_total = (SELECT SUM(item_quantity * item_price) FROM order_item WHERE order_id = ?)
-                WHERE order_id = ?
-            `, [order.order_id, order.order_id]);
-            }
-        
-        await db.query(`
-            UPDATE product
-            SET product_stock = product_stock - ?
-            WHERE product_id = ?
-        `, [quantity, productId]);
+                VALUES (?, ?)`, [order.insertId, gcashref]);
+        }
 
         res.json({ order: true, message: "Order created" });
 

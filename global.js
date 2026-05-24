@@ -221,7 +221,7 @@ async function quickBuy(productId, quantity, gcashref=null) {
 			})
 		});
 		
-		return await quickOrder.json();
+		return await quickCart.json();
 	} catch (err) {
 		console.error('Error creating order:', err);
 	}
@@ -237,14 +237,18 @@ async function getOrders() {
 }
 
 async function addOrder(gcashref=null) {
-	try {
-		const add = gcashref? `/${gcashref}` : '';
-		const response = await fetch(`${API_BASE_URL}/orders/${CURRENT_USER_ID}`, {
+	try {	
+		const gcashSegment = gcashref ? `/${gcashref}` : '';
+		const url = `${API_BASE_URL}/orders/${CURRENT_USER_ID}${gcashSegment}`;
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' }
 		});
-		window.location.href = '/store/order.html';
-		return await response.json();
+		const result = await response.json();
+		if (result) {
+			window.location.href = '/store/order.html';
+		}
+		return result;
 	} catch (err) {
 		console.error('Error creating order:', err);
 	}
