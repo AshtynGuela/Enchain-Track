@@ -42,7 +42,7 @@ async function createDealCard(category, items=null, index=0) {
 				<div class="detail-sample1">${product.product_name}</div>
 				<div class="detail-sample2">${product.product_description}</div>
 			</div>
-			<div class="deal-price">$${formatPrice(product.product_price)}</div>
+			<div class="deal-price">₱${formatPrice(product.product_price)}</div>
 			${discountText}
 		</div>`;
 	});
@@ -77,7 +77,7 @@ function createItemCard(products, category) {
 			</div>
 			${discountText}
 			<div class="item-card-details">
-				<div class="item-price">$${formatPrice(product.product_price)}</div>
+				<div class="item-price">₱${formatPrice(product.product_price)}</div>
 				<div class="item-detail1">${product.product_name}</div>
 				<div class="item-detail2">${product.product_description}</div>
 			</div>
@@ -278,7 +278,7 @@ else if (document.body.id === 'store-cart') {
 	}
 
 	function formatPrice(value) {
-		return `$${value.toFixed(2)}`;
+		return `₱${value.toFixed(2)}`;
 	}
 
 	function getCartRows() {
@@ -478,7 +478,7 @@ else if (document.body.id === 'store-order') {
 				<tr class="order-row" data-order-id="${order.order_id}">
 					<td class="text-center">${order.order_id}</td>
 					<td class="text-center">${itemCount}</td>
-					<td class="text-right">${formatPrice(total)}</td>
+					<td class="text-right">₱${formatPrice(total)}</td>
 					<td class="text-center"><span class="status-pill ${order.order_status.toLowerCase()}">${order.order_status}</span></td>
 					<td class="text-center">${order.order_date}</td>
 				</tr>
@@ -518,10 +518,9 @@ else if (document.body.id === 'store-order') {
 			`;
 		}).join('');
 
-		document.getElementById('modalSubtotal').textContent = formatPrice(subtotal);
-		document.getElementById('modalShipping').textContent = formatPrice(shippingCost);
-		document.getElementById('modalTotal').textContent = formatPrice(total);
-
+		document.getElementById('modalSubtotal').textContent = `₱${formatPrice(subtotal)}`;
+		document.getElementById('modalShipping').textContent = `₱${formatPrice(shippingCost)}`;
+		document.getElementById('modalTotal').textContent = `₱${formatPrice(total)}`;
 		document.getElementById('orderDetailsOverlay').hidden = false;
 	}
 

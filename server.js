@@ -39,9 +39,16 @@ testDB();
 // signup customer
 app.post("/signup", async (req, res) => {
     const { username, phonenumber, password } = req.body;
-    console.log(req.body);
 
     try {
+        if (!username || !phonenumber || !password) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        if (password != req.body.confirmPassword) {
+            return res.status(400).json({ message: "Passwords do not match" });
+        }
+
         const hashedPassword = await encrypt.hash(password, 10);
 
         const [result] = await db.query(
